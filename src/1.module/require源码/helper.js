@@ -20,8 +20,7 @@ function makeRequireFunction(mod) {
         try {
             exports.requireDepth += 1;
 
-            // require 方法入口
-
+            //** require 方法入口
             return mod.require(path);
         } finally {
             exports.requireDepth -= 1;
