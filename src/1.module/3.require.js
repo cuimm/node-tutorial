@@ -7,33 +7,15 @@ function Module(id) {
     this.exports = {};  // 模块导出对象
 }
 
-Module._extensions = ['.js', '.json'];
-
+// 缓存模块（此处的_cache对象只需要来保存一些数据，去掉原型链可以提高性能）
+Module._cache = Object.create(null);
+// 用来扩展不同类型模块的加载逻辑
+Module._extensions = Object.create(null);
+// 导出.js文件时包装的自执行函数
 Module.wrapper = [
     '(function (exports, require, module, __filename, __dirname) { ',
     '\n});'
 ];
-
-Module._extensions['.js'] = function (module) {
-    const content = fs.readFileSync(module.id, 'utf-8');
-    const wrapper = Module.wrap(content);
-    /*
-    (function (exports, require, module, __filename, __dirname) {
-        module.exports = 'hello';
-    });
-    */
-    const fn = vm.runInThisContext(wrapper);
-
-    // module.exports 和 exports
-    // https://zhuanlan.zhihu.com/p/87729137
-    // *****************************************
-    // let exports = module.exports = {}
-    // exports.a = 'hello'
-    // return module.exports
-    // ***********************************
-    let thisValue = module.exports;
-    fn.call(thisValue, module.exports, myRequire, module, module.id, path.dirname(module.id));
-};
 
 Module.wrap = function (script) {
     return Module.wrapper[0] + script + Module.wrapper[1];
@@ -52,13 +34,16 @@ Module._resolveFilename = function (filename) {
     if (exists) {
         return filePath;
     }
-    for (let i = 0; i < Module._extensions.length; i++) {
-        const extension = Module._extensions[i];
+
+    const keys = Object.keys(Module._extensions);
+    for (let i = 0; i < keys.length; i++) {
+        const extension = keys[i];
         const concatFilePath = filePath + extension;
         if (fs.existsSync(concatFilePath)) {
             return concatFilePath;
         }
     }
+    throw new Error('not found module');
 };
 
 /**
@@ -67,20 +52,61 @@ Module._resolveFilename = function (filename) {
 Module.prototype.load = function (module) {
     // 获取扩展名
     const extension = path.extname(this.id);
-
     // 设计模块/策略模式（通过不同扩展名加载不同的逻辑）
     Module._extensions[extension](this);
 };
 
-function myRequire(id) {
-    const fileName = Module._resolveFilename(id);
-    const module = new Module(fileName);
-    module.load();
+// extension for .js
+Module._extensions['.js'] = function (module) {
+    const content = fs.readFileSync(module.id, 'utf-8');
+    const wrapper = Module.wrap(content);
+    /*
+    (function (exports, require, module, __filename, __dirname) {
+        module.exports = 'hello';
+    });
+    */
+    const fn = vm.runInThisContext(wrapper);
 
+    let thisValue = module.exports;
+    fn.call(thisValue, module.exports, myRequire, module, module.id, path.dirname(module.id));
+};
+
+// extension for .json
+Module._extensions['.json'] = function (module) {
+    const content = fs.readFileSync(module.id, 'utf-8');
+    try {
+        module.exports = JSON.parse(content);
+    } catch (e) {
+        throw e.message;
+    }
+};
+
+function myRequire(id) {
+    // 转化成绝对路径
+    const fileName = Module._resolveFilename(id);
+    // 首先从缓存中读取模块，若多次读取返，返回原来的exports对象
+    if (Module._cache[fileName]) {
+        return Module._cache[fileName].exports;
+    }
+    // 根据路径来缓存模块
+    const module = new Module(fileName);
+    // 加载模块
+    module.load();
+    // 缓存模块
+    Module._cache[fileName] = module;
+    // 返回module.exports对象
     return module.exports;
 }
 
-const result = myRequire('./test');
-console.log('result', result);
 
-// console.log(path.resolve(__dirname, './test'));
+console.log('----------------EXAMPLE------------------');
+
+let result = myRequire('./assets/test');
+result = myRequire('./assets/test');
+result = myRequire('./assets/test');
+result = myRequire('./assets/test');
+
+console.log('** result=', result);
+
+let info = myRequire('./assets/info');
+console.log('** info=', info);
