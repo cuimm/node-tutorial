@@ -18,7 +18,7 @@ Module.wrap = function (content) {
     return Module.wrapper[0] + content + Module.wrapper[1];
 };
 
-Module._resolveFilename = function (filename) {
+Module.resolveFilename = function (filename) {
     const filePath = path.resolve(__dirname, filename);
     const exists = fs.existsSync(filePath);
     if (exists) {
@@ -57,7 +57,7 @@ Module.prototype.load = function () {
 };
 
 function __require(id) {
-    const filePath = Module._resolveFilename(id);
+    const filePath = Module.resolveFilename(id);
     if (Module.cache[filePath]) {
         return Module.cache[filePath].exports;
     }
