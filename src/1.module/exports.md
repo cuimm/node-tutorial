@@ -1,6 +1,6 @@
 ### nodejs中的导出对象 modules.exports 和 exports 区别
 
-> 默认 modules.exports 和 exports 指向同一个对象，该指向指向{}，如果模块内部没有将modules.exports 或者 exports指向一个全新的对象，则这两个对象是相等的
+> 默认 modules.exports 和 exports 指向同一个空对象{}，如果模块内部没有将modules.exports 或者 exports指向一个全新的对象，则这两个对象是相等的
 
 
 #### 首先了解require内部原理

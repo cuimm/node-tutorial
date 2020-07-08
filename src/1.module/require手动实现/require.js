@@ -39,6 +39,8 @@ Module.extensions['.js'] = function (module) {
     const content = fs.readFileSync(module.id, 'utf-8');
     const wrapper = Module.wrap(content);
     const compiledWrapper = vm.runInThisContext(wrapper);
+
+    // 让包装过的函数执行，改变this指向，模块内部指向module.exports => 默认模块内部的exports===module.exports === {}，除非重新执行新的内存地址的时候，二者才不再相等
     compiledWrapper.call(module.exports, module.exports, module, __require, module.id, path.dirname(module.id));
 };
 
