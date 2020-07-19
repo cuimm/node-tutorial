@@ -1,6 +1,7 @@
 ### nodejs中的导出对象 modules.exports 和 exports 区别
 
-> 默认 modules.exports 和 exports 指向同一个空对象{}，如果模块内部没有将modules.exports 或者 exports指向一个全新的对象，则这两个对象是相等的
+> 默认 modules.exports 和 exports 指向同一个空对象{}，
+  如果模块内部没有将modules.exports 或者 exports指向一个全新的对象，则这两个对象是相等的
 
 
 #### 首先了解require内部原理
@@ -15,7 +16,7 @@
 (function(exports, require, module, filename, dirname){
     // 模块内容
     module.exports = 'hello';
-}).call(thisValue, exports, module, module.id, path.dirname(module.id));
+}).call(thisValue, exports, require, module, module.id, path.dirname(module.id));
 ```
 
 ```
