@@ -1,26 +1,10 @@
 #!/usr/bin/env node
-
 const program = require('commander')
 const chalk = require('chalk')
 const packageJson = require('../package')
+const config = require('./config')
+const createServer = require('../src/server')
 
-const config = {
-  port: {
-    option: '-p --port <v>',
-    description: 'Port to use [8080]',
-    usage: 'cs -p 8080',
-  },
-  address: {
-    option: '-a --address <v>',
-    description: 'Address to use [0.0.0.0]',
-    usage: 'cs --address 127.0.0.1',
-  },
-  directory: {
-    option: '-d --directory <v>',
-    description: 'Show directory listings [true]',
-    usage: 'cs -d D:'
-  },
-}
 program.name('cs')
 program.usage('--option <value>')
 
@@ -39,4 +23,18 @@ program.version(packageJson.version)
 
 // 解析用户参数
 const userConfig = program.parse(process.argv)
-console.log('userConfig', userConfig);
+// console.log('userConfig', userConfig);
+
+const defaultConfig = {
+  port: 8089,
+  address: 'localhost',
+  directory: process.cwd(),
+}
+
+// 最终配置
+const mergeConfig = Object.assign({}, defaultConfig, userConfig)
+// console.log('mergeConfig', mergeConfig);
+
+// 创建服务
+const server = createServer(mergeConfig)
+server.start()
