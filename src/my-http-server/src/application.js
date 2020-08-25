@@ -4,7 +4,8 @@ const url = require('url');
 const path = require('path');
 const fs = require('fs').promises;
 const {createReadStream} = require('fs')
-const mime = require('mime')
+const mime = require('mime');
+const ejs = require('ejs');
 
 class Server {
   constructor(options) {
@@ -35,23 +36,44 @@ class Server {
       } else {
         this.handleDirectory(filePath, res);
       }
-    } catch (e) {
-      res.end('error', e);
+    } catch (error) {
+      this.handleError(error, res);
     }
   }
 
+  /**
+   * 渲染文件夹
+   * @param dirPath
+   * @param res
+   * @returns {Promise<void>}
+   */
   async handleDirectory(dirPath, res) {
-    // console.log(fs.readdir(dirPath));
-    const fileList = await fs.readdir(dirPath);
-    console.log(fileList);
-
-
-    res.end(dirPath);
+    console.log('handleDirectory');
+    // 读取文件夹
+    const dirs = await fs.readdir(dirPath);
+    // 读取模版
+    const template = await fs.readFile(path.join(__dirname, 'template.html'), 'utf-8');
+    // ejs渲染模版
+    const renderTemplate = await ejs.render(template, {dirs}, {async: true});
+    // 返回
+    res.end(renderTemplate);
   }
 
+  /**
+   * 渲染文件
+   * @param filePath
+   * @param res
+   * @returns {Promise<void>}
+   */
   async handleFile(filePath, res) {
     res.setHeader('Content-Type', `${mime.getType(filePath)}; charset=utf-8;`);
     createReadStream(filePath).pipe(res)
+  }
+
+  handleError(error, res) {
+    console.log('error', error);
+    res.statusCode = 404;
+    res.end('Not Found');
   }
 }
 
