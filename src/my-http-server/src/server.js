@@ -1,4 +1,4 @@
-const Server = require('./application')
+const Server = require('./application');
 
 /**
  * 创建服务（工厂服务）
@@ -12,7 +12,7 @@ function createServer({port, address, directory} = {}) {
     port,
     address,
     directory,
-  })
+  });
 }
 
-module.exports = createServer
+module.exports = createServer;
